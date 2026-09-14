@@ -87,7 +87,7 @@ func TestAuthorizationURL(t *testing.T) {
 
 func TestSubscriptionExpiresAt(t *testing.T) {
 	client := NewOAuthClient("")
-	client.client.GetTransport().WrapRoundTripFunc(func(http.RoundTripper) req.HttpRoundTripFunc {
+	client.subscriptionClient.GetTransport().WrapRoundTripFunc(func(http.RoundTripper) req.HttpRoundTripFunc {
 		return func(request *http.Request) (*http.Response, error) {
 			if request.URL.String() != subscriptionURL+"?account_id=chatgpt-account" {
 				t.Fatalf("subscription URL = %q", request.URL.String())
@@ -115,7 +115,7 @@ func TestSubscriptionExpiresAt(t *testing.T) {
 
 func TestSubscriptionExpiresAtAllowsNoPaidSubscription(t *testing.T) {
 	client := NewOAuthClient("")
-	client.client.GetTransport().WrapRoundTripFunc(func(http.RoundTripper) req.HttpRoundTripFunc {
+	client.subscriptionClient.GetTransport().WrapRoundTripFunc(func(http.RoundTripper) req.HttpRoundTripFunc {
 		return func(*http.Request) (*http.Response, error) {
 			return &http.Response{
 				StatusCode: http.StatusOK,

@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 	"sync"
 	"time"
@@ -17,6 +18,7 @@ const defaultEmailVerificationTTL = time.Hour
 const defaultEmailResendCooldown = time.Minute
 
 type Service struct {
+	logger               *slog.Logger
 	pricingCache         sync.Map
 	paymentConfig        payment.Config
 	store                Store
@@ -97,3 +99,6 @@ func (s *Service) decorateUser(user domain.User) domain.User {
 	user.IsAdmin = user.Role == domain.RoleAdmin
 	return user
 }
+
+// SetLogger configures application diagnostics during startup.
+func (s *Service) SetLogger(logger *slog.Logger) { s.logger = logger }

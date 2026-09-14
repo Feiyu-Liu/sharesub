@@ -209,6 +209,8 @@ func TestRefreshAccountTokenRemainsUsableWhenSubscriptionQueryFails(t *testing.T
 	now := time.Date(2026, 8, 6, 10, 0, 0, 0, time.UTC)
 	manager := testSecurityManager(t)
 	account := encryptedRefreshAccount(t, manager, now)
+	previousExpiry := now.Add(30 * 24 * time.Hour)
+	account.SubscriptionExpiresAt = &previousExpiry
 	store := &tokenRefreshStore{account: account}
 	oauth := &tokenRefreshOAuth{
 		token:           OAuthToken{AccessToken: "new-access", RefreshToken: "new-refresh", ExpiresAt: now.Add(10 * 24 * time.Hour)},
@@ -222,6 +224,9 @@ func TestRefreshAccountTokenRemainsUsableWhenSubscriptionQueryFails(t *testing.T
 	}
 	if access != "new-access" || !refreshed || store.updates != 1 || store.subscriptionUpdates != 0 {
 		t.Fatalf("access = %q, refreshed = %v, token updates = %d, subscription updates = %d", access, refreshed, store.updates, store.subscriptionUpdates)
+	}
+	if store.account.SubscriptionExpiresAt == nil || !store.account.SubscriptionExpiresAt.Equal(previousExpiry) {
+		t.Fatal("subscription failure changed existing expiry")
 	}
 }
 

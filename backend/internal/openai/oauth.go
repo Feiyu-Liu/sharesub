@@ -24,9 +24,10 @@ const (
 )
 
 type OAuthClient struct {
-	client   *req.Client
-	tokenURL string
-	now      func() time.Time
+	client             *req.Client
+	subscriptionClient *req.Client
+	tokenURL           string
+	now                func() time.Time
 }
 
 func NewOAuthClient(proxyURL string) *OAuthClient {
@@ -35,9 +36,10 @@ func NewOAuthClient(proxyURL string) *OAuthClient {
 		client.SetProxyURL(proxyURL)
 	}
 	return &OAuthClient{
-		client:   client,
-		tokenURL: tokenURL,
-		now:      time.Now,
+		client:             client,
+		subscriptionClient: newSubscriptionClient(proxyURL),
+		tokenURL:           tokenURL,
+		now:                time.Now,
 	}
 }
 
@@ -88,11 +90,20 @@ func (c *OAuthClient) Refresh(ctx context.Context, refreshToken string) (applica
 	return token, nil
 }
 
-func (c *OAuthClient) SubscriptionExpiresAt(ctx context.Context, accessToken, accountID, proxyURL string) (*time.Time, error) {
-	client := c.client
+// Subscription traffic uses a separate browser fingerprint from OAuth token requests.
+func newSubscriptionClient(proxyURL string) *req.Client {
+	client := req.C().SetTimeout(120 * time.Second).ImpersonateFirefox()
 	if proxyURL != "" {
-		client = req.C().SetTimeout(120 * time.Second).ImpersonateChrome()
 		client.SetProxyURL(proxyURL)
+	}
+	return client
+}
+
+func (c *OAuthClient) SubscriptionExpiresAt(ctx context.Context, accessToken, accountID, proxyURL string) (*time.Time, error) {
+	client := c.subscriptionClient
+	if proxyURL != "" {
+		client = newSubscriptionClient(proxyURL)
+		defer client.GetTransport().CloseIdleConnections()
 	}
 	var subscription struct {
 		PlanType    string `json:"plan_type"`
@@ -109,18 +120,28 @@ func (c *OAuthClient) SubscriptionExpiresAt(ctx context.Context, accessToken, ac
 		SetQueryParam("account_id", accountID).
 		SetSuccessResult(&subscription).
 		Get(subscriptionURL)
-	if err != nil {
-		return nil, fmt.Errorf("query OpenAI subscription: %w", err)
+	status := 0
+	challenge := false
+	if resp != nil && resp.Response != nil {
+		status = resp.StatusCode
+		challenge = strings.EqualFold(strings.TrimSpace(resp.Header.Get("Cf-Mitigated")), "challenge")
 	}
-	if !resp.IsSuccessState() {
-		return nil, fmt.Errorf("OpenAI subscription query returned status %d", resp.StatusCode)
+	if challenge || (status != 0 && (status < 200 || status >= 300)) {
+		return nil, &application.SubscriptionQueryError{Kind: "http", StatusCode: status, CloudflareChallenge: challenge}
+	}
+	if err != nil {
+		kind := "network"
+		if status != 0 {
+			kind = "response"
+		}
+		return nil, &application.SubscriptionQueryError{Kind: kind, StatusCode: status, Cause: err}
 	}
 	if subscription.ActiveUntil == "" {
 		return nil, nil
 	}
 	expiresAt, err := time.Parse(time.RFC3339, subscription.ActiveUntil)
 	if err != nil {
-		return nil, fmt.Errorf("parse OpenAI subscription active_until: %w", err)
+		return nil, &application.SubscriptionQueryError{Kind: "response", StatusCode: status, Cause: err}
 	}
 	return &expiresAt, nil
 }

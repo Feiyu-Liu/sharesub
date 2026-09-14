@@ -350,7 +350,7 @@ func (s *Service) CompleteOpenAIConnect(ctx context.Context, userID, state, code
 		return domain.Account{}, err
 	}
 	subscriptionObserved := false
-	if subscriptionExpiresAt, queryErr := s.oauth.SubscriptionExpiresAt(ctx, token.AccessToken, token.ChatGPTAccountID, account.ProxyURL); queryErr == nil {
+	if subscriptionExpiresAt, queryErr := s.queryAccountSubscription(ctx, account, token.AccessToken, "account_connect"); queryErr == nil {
 		account.SubscriptionExpiresAt = subscriptionExpiresAt
 		subscriptionObserved = true
 	}
@@ -424,7 +424,7 @@ func (s *Service) completeOpenAIReauthorize(ctx context.Context, actorUserID, re
 	if err := s.hydrateAccountProxy(&account); err != nil {
 		return domain.Account{}, err
 	}
-	if subscriptionExpiresAt, queryErr := s.oauth.SubscriptionExpiresAt(ctx, token.AccessToken, token.ChatGPTAccountID, account.ProxyURL); queryErr == nil {
+	if subscriptionExpiresAt, queryErr := s.queryAccountSubscription(ctx, account, token.AccessToken, "account_reauthorize"); queryErr == nil {
 		account.SubscriptionExpiresAt = subscriptionExpiresAt
 	}
 	event, err := s.newAuditEvent(actorUserID, "account.reauthorized", "account", account.ID, map[string]string{"account_name": account.Name})

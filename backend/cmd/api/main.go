@@ -101,6 +101,7 @@ func main() {
 		}
 	}
 	app := application.NewServiceWithEmailVerification(store, securityManager, oauthClient, cfg.SessionTTL, cfg.OAuthRedirect, cfg.PublicURL, emailSender, cfg.EmailVerificationTTL, cfg.EmailResendCooldown, gateway)
+	app.SetLogger(logger)
 	app.SetRuntimeStatusProvider(runtimeMonitor)
 	if err := app.InitializePayments(ctx, config.EasyPay()); err != nil {
 		logger.Error("configure EasyPay", "error", err)
