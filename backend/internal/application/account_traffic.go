@@ -14,10 +14,15 @@ type accountTrafficController struct {
 	changed     chan struct{}
 	states      map[string]*accountTrafficState
 	nextCleanup time.Time
+	instanceID  string
+	nextSeries  uint64
+	now         func() time.Time
+	history     map[concurrencySeriesKey]*concurrencySeries
 }
 
 type accountTrafficState struct {
 	activeRequests        int
+	activeMembers         map[string]int
 	quiescing             bool
 	idle                  chan struct{}
 	minuteStart           time.Time
@@ -32,7 +37,7 @@ const (
 )
 
 func newAccountTrafficController() *accountTrafficController {
-	return &accountTrafficController{changed: make(chan struct{}), states: make(map[string]*accountTrafficState)}
+	return &accountTrafficController{instanceID: concurrencyInstanceID(), now: time.Now, history: make(map[concurrencySeriesKey]*concurrencySeries), changed: make(chan struct{}), states: make(map[string]*accountTrafficState)}
 }
 
 func (c *accountTrafficController) acquire(accountID string, maxConcurrency, rpmLimit int, now time.Time) (func(), error) {
@@ -57,7 +62,7 @@ func (c *accountTrafficController) prepare(accountID string, maxConcurrency, rpm
 	return c.prepareRequest(accountID, maxConcurrency, rpmLimit, now, true)
 }
 
-func (c *accountTrafficController) prepareRequest(accountID string, maxConcurrency, rpmLimit int, now time.Time, countRPM bool) (commit, release func(), err error) {
+func (c *accountTrafficController) prepareRequest(accountID string, maxConcurrency, rpmLimit int, now time.Time, countRPM bool, credentials ...domain.GatewayCredential) (commit, release func(), err error) {
 	c.mu.Lock()
 	if c.nextCleanup.IsZero() || !now.Before(c.nextCleanup) {
 		for id, cached := range c.states {
@@ -95,6 +100,18 @@ func (c *accountTrafficController) prepareRequest(accountID string, maxConcurren
 	if countRPM && rpmLimit > 0 && state.minuteRequests+state.pendingMinuteRequests[minuteKey] >= rpmLimit {
 		c.mu.Unlock()
 		return nil, nil, domain.ErrAccountRateLimited
+	}
+	if len(credentials) > 0 {
+		credential := credentials[0]
+		if err := admitMemberConcurrency(state, credential); err != nil {
+			c.mu.Unlock()
+			return nil, nil, err
+		}
+		if state.activeMembers == nil {
+			state.activeMembers = make(map[string]int)
+		}
+		state.activeMembers[credential.Member.UserID]++
+		c.changeHistory(credential, 1, now)
 	}
 	if state.activeRequests == 0 {
 		state.idle = make(chan struct{})
@@ -142,6 +159,14 @@ func (c *accountTrafficController) prepareRequest(accountID string, maxConcurren
 			decrementPending()
 		}
 		state.activeRequests--
+		if len(credentials) > 0 {
+			user := credentials[0].Member.UserID
+			state.activeMembers[user]--
+			if state.activeMembers[user] == 0 {
+				delete(state.activeMembers, user)
+			}
+			c.changeHistory(credentials[0], -1, c.now())
+		}
 		if state.activeRequests == 0 {
 			close(state.idle)
 		}
@@ -247,4 +272,49 @@ func closedSignal() chan struct{} {
 	ch := make(chan struct{})
 	close(ch)
 	return ch
+}
+
+func (c *accountTrafficController) prepareGateway(credential domain.GatewayCredential, now time.Time) (func(), func(), error) {
+	return c.prepareRequest(credential.Account.ID, credential.Account.MaxConcurrency, credential.Account.RPMLimit, now, true, credential)
+}
+
+func admitMemberConcurrency(state *accountTrafficState, credential domain.GatewayCredential) error {
+	policy := credential.ConcurrencyPolicy
+	if !policy.Enabled {
+		return nil
+	}
+	bases := make(map[string]int, len(policy.Members))
+	reserved := 0
+	var own domain.MemberConcurrencyLimit
+	found := false
+	for _, m := range policy.Members {
+		bases[m.UserID] = m.BaseLimit
+		reserved += m.BaseLimit
+		if m.UserID == credential.Member.UserID {
+			own = m
+			found = true
+		}
+	}
+	if !found {
+		return domain.ErrAccountUnavailable
+	}
+	if credential.Account.MaxConcurrency <= 0 || reserved > credential.Account.MaxConcurrency {
+		return domain.ErrConcurrencyConfiguration
+	}
+	current := state.activeMembers[own.UserID]
+	if own.MaxConcurrency > 0 && current >= own.MaxConcurrency {
+		return domain.ErrMemberConcurrency
+	}
+	if current < own.BaseLimit {
+		return nil
+	}
+	sharedUsed := 0
+	for user, n := range state.activeMembers {
+		sharedUsed += max(0, n-bases[user])
+	}
+	// Internal quota-probe reservations are accounted for by the account-level check.
+	if sharedUsed >= credential.Account.MaxConcurrency-reserved {
+		return domain.ErrMemberConcurrency
+	}
+	return nil
 }

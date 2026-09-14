@@ -145,6 +145,7 @@ func main() {
 		TerminalRecords: cfg.TerminalRecordRetention,
 	}
 	go runResourceCleanup(ctx, store, retention, cfg.CleanupInterval, logger, runtimeMonitor)
+	go app.RunConcurrencyHistory(ctx)
 	if cfg.TokenRefreshEnabled {
 		go runTokenRefresh(ctx, app, cfg, logger, runtimeMonitor)
 	}
@@ -164,6 +165,9 @@ func main() {
 	}
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		logger.Error("shutdown API", "error", err)
+	}
+	if err := app.FlushConcurrencyHistory(shutdownCtx); err != nil {
+		logger.Error("flush concurrency history on shutdown", "error", err)
 	}
 }
 

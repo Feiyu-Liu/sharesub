@@ -30,6 +30,7 @@ type Service struct {
 	publicURL            string
 	now                  func() time.Time
 	traffic              *accountTrafficController
+	concurrencyFlush     sync.Mutex
 	runtimeStatus        RuntimeStatusProvider
 	emailSender          EmailVerificationSender
 	emailVerificationTTL time.Duration
@@ -77,6 +78,7 @@ type AccountConfigInput struct {
 
 func NewService(store Store, securityManager *security.Manager, oauth OpenAIOAuth, sessionTTL time.Duration, redirectURI, publicURL string, quotaProber ...QuotaProber) *Service {
 	service := &Service{store: store, security: securityManager, oauth: oauth, sessionTTL: sessionTTL, redirectURI: redirectURI, publicURL: strings.TrimRight(publicURL, "/"), now: time.Now, traffic: newAccountTrafficController(), emailVerificationTTL: defaultEmailVerificationTTL, emailResendCooldown: defaultEmailResendCooldown}
+	service.traffic.now = func() time.Time { return service.now() }
 	if len(quotaProber) > 0 {
 		service.quotaProber = quotaProber[0]
 	}

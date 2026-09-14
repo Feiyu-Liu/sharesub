@@ -504,6 +504,7 @@ type PlanDetail struct {
 }
 
 type GatewayCredential struct {
+	ConcurrencyPolicy        ConcurrencyPolicy
 	APIKeyID                 string
 	APIKeyStrategy           string
 	APIKeyFastPolicy         []FastPolicyRule

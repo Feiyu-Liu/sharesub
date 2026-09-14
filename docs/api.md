@@ -311,3 +311,27 @@ Responses 与图片端点的请求体上限为 256 MiB；纯文本 Alpha Search 
 美元用量沿用网关估算成本口径，按当前 Plan、成员、绑定账号及绑定代次，在账号当前 `7d` 窗口中累计全部 API Key 的请求成本。统计起点取七天窗口开始时间和该绑定代次七天窗口基线的 `accounting_started_at` 两者中的较晚时间。金额修改不会清除本窗口历史用量；5 小时窗口重置不会重置美元用量，账号 7 天窗口切换后重新累计。官方额度重置同步成功后，即使七天窗口时间不变，也从新的记账基线开始累计，不再计入重置前的用量，配置的美元上限保持不变。使用当前已有七天额度快照确定窗口。
 
 请求前执行现有账号限制、固定份额限制和美元限制，任一达到即跳过该 Plan；无其他可用路由时沿用 `quota_exhausted`。共享模式没有个人百分比限制，但也可手动设置美元上限。取消美元限制不取消其他限制，固定模式的 0% 成员仍仅查看。HTTP 请求及 WebSocket 后续轮次使用同一额度检查。成本在请求完成后记账，已经放行的并发或流式请求不会被中途终止，因此最后一批请求可能超过配置金额。
+
+## Plan 并发
+
+- `GET /api/plans/{planID}/concurrency`：有效 Plan 成员读取当前绑定账号的近 24 小时分钟历史、当前用户占用和分配规则。分钟边界对齐，包含当前未结束分钟。没有历史时仍返回完整时间轴，`observed_seconds=0` 的点表示尚未采集。
+- `PUT /api/plans/{planID}/concurrency`：仅当前房主修改有效 Plan 的并发分配，输入为完整 `ConcurrencyPolicy`，返回 `{"updated":true}`。必须提交全部有效成员且每个用户只能出现一次；成员集合变化返回 `409 conflict`，需刷新后重新编辑。
+- 管理员对应接口为 `GET/PUT /api/admin/plans/{planID}/concurrency`，具有相同契约，审计保留管理员身份。
+
+`ConcurrencyPolicy` 固定字段为 `enabled`（boolean）和 `members`（数组）；每个成员包含 `user_id`、`username`、`base_limit`、`max_concurrency`。保存时以 `user_id` 识别成员，用户名以服务端用户资料为准。两个数值均为 0–100 的整数，非零个人上限不能小于基础名额。个人上限 0 跟随账号上限；成员分配关闭时不执行成员限制。开启需要账号总上限大于 0，且足以覆盖所有基础名额，否则返回 `400 concurrency_configuration_invalid`。
+
+GET 返回固定字段：
+
+| 字段 | 含义 |
+|---|---|
+| `account_id` | 当前绑定账号 ID；未绑定时为空字符串 |
+| `account_max` | 当前账号总并发上限，0 为不限制 |
+| `policy` | 上述分配配置 |
+| `current` / `peak` | 当前网关请求并发 / 返回时间范围内已采集的最高网关总并发 |
+| `updated_at` | 当前快照时间 |
+| `points` | 按时间升序的分钟数组：`bucket_start`、`observed_seconds`、`average`、`peak` |
+| `members` | 成员时间序列：`user_id`、`username`、`current`、`average`（与 `points` 等长、同索引的平均并发数组） |
+
+历史中有占用的已退出成员仍可出现在时间序列中；分配配置仅列出当前有效成员。所有时刻使用 RFC 3339，分钟以 UTC 对齐，前端按本地时区显示。平均值可以是小数，`observed_seconds=0` 时 `average=0` 是数值占位，图表应显示采集空白而非零并发。账号上限是当前配置，不代表历史上限。
+
+网关成员个人上限或共享池满时返回 `429 member_concurrency_limited`，账号总上限满仍返回 `429 account_concurrency_limited`；HTTP 路由继续使用现有其他候选 Plan 选择逻辑。WebSocket 后续轮次保持已绑定路由，容量不足以可重试关闭码 1013 结束连接。RPM 控制保持独立，不使用按时间补充的令牌桶代替并发归还。

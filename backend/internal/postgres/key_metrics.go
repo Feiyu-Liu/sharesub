@@ -253,7 +253,8 @@ func (s *Store) ResolveGatewayRoutes(ctx context.Context, hash []byte, now time.
 				) costs
 				WHERE q.account_id=a.id AND q.reset_at>$2
 			),0),
-			COALESCE((SELECT max(q.used_micros) FROM account_quota_snapshots q WHERE q.account_id=a.id AND q.reset_at>$2),0)
+			COALESCE((SELECT max(q.used_micros) FROM account_quota_snapshots q WHERE q.account_id=a.id AND q.reset_at>$2),0),
+            `+planConcurrencyPolicySQL+`
 		FROM api_keys k
 		JOIN api_key_plans r ON r.api_key_id=k.id AND r.enabled=true
 		JOIN shared_plans p ON p.id=r.plan_id AND p.status='active'
@@ -272,7 +273,7 @@ func (s *Store) ResolveGatewayRoutes(ctx context.Context, hash []byte, now time.
 			&credential.Member.ID, &credential.Member.PlanID, &credential.Member.UserID, &credential.Member.Username, &credential.Member.Email, &credential.Member.Role, &credential.Member.Status, &credential.Member.ShareBasisPoints, &credential.Member.USDLimitMicros, &credential.Member.CreatedAt,
 			&credential.Plan.ID, &credential.Plan.OwnerUserID, &credential.Plan.AccountID, &credential.Plan.Name, &credential.Plan.Status, &credential.Plan.Visibility, &credential.Plan.PublicSlots, &credential.Plan.PublicShareBasisPoints, &credential.Plan.AllocationMode, &credential.Plan.CreatedAt, &credential.AccountBindingGeneration,
 			&credential.Account.ID, &credential.Account.OwnerUserID, &credential.Account.Name, &credential.Account.Notes, &credential.Account.Email, &credential.Account.ChatGPTAccountID, &credential.Account.PlanType, &credential.Account.SubscriptionExpiresAt, &credential.AccessTokenCiphertext, &credential.RefreshTokenCiphertext, &credential.ProxyURLCiphertext, &credential.Account.MaxConcurrency, &credential.Account.RPMLimit, &credential.Account.FastPolicy, &credential.Account.CodexFingerprintMode, &credential.TokenExpiresAt, &credential.Account.Status, &credential.Account.LastError, &credential.Account.CreatedAt,
-			&credential.UsageMicros, &credential.AccountUsageMicros)
+			&credential.UsageMicros, &credential.AccountUsageMicros, &credential.ConcurrencyPolicy)
 		if err != nil {
 			return out, err
 		}

@@ -18,6 +18,8 @@ import PlanMembersTab from './views/PlanMembersTab.vue'
 import ProfileView from './views/ProfileView.vue'
 import { usePlansView } from './views/usePlansView'
 
+vi.mock('./components/PlanConcurrencyPanel.vue', () => ({ default: { template: '<section data-testid="concurrency-panel" />' } }))
+
 const createdAt = '2026-08-03T00:00:00Z'
 const owner: User = {
   id: 'owner',

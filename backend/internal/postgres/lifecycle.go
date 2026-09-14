@@ -310,7 +310,8 @@ func (s *Store) RebindPlanAccount(ctx context.Context, planID, ownerID, accountI
 	}
 	firstBinding := currentAccountID == nil
 	var accountOwner, accountStatus string
-	if err := tx.QueryRow(ctx, `SELECT owner_user_id,status FROM openai_accounts WHERE id=$1 FOR UPDATE`, accountID).Scan(&accountOwner, &accountStatus); err != nil {
+	var accountMax int
+	if err := tx.QueryRow(ctx, `SELECT owner_user_id,status,max_concurrency FROM openai_accounts WHERE id=$1 FOR UPDATE`, accountID).Scan(&accountOwner, &accountStatus, &accountMax); err != nil {
 		return domain.Plan{}, mapError(err)
 	}
 	if accountOwner != ownerID {
@@ -325,6 +326,9 @@ func (s *Store) RebindPlanAccount(ctx context.Context, planID, ownerID, accountI
 	}
 	if alreadyBound {
 		return domain.Plan{}, domain.ErrAccountAlreadyBound
+	}
+	if err := validatePlanConcurrencyCapacity(ctx, tx, planID, accountMax); err != nil {
+		return domain.Plan{}, err
 	}
 	newGeneration := currentGeneration + 1
 	plan, err := scanPlan(tx.QueryRow(ctx, `UPDATE shared_plans SET account_id=$3,account_binding_generation=$4,account_bound_at=$5,updated_at=$6 WHERE id=$1 AND owner_user_id=$2 RETURNING id,owner_user_id,account_id,name,description,status,visibility,public_slots,public_share_basis_points,allocation_mode,created_at,archived_at`, planID, ownerID, accountID, newGeneration, observedAt, event.CreatedAt))
@@ -376,7 +380,7 @@ func (s *Store) RemovePlanMember(ctx context.Context, planID, actorUserID, membe
 	if actorUserID == targetUserID {
 		event.Action = "member.left"
 	}
-	if _, err := tx.Exec(ctx, `UPDATE plan_members SET status='removed',removed_at=$3,updated_at=$3 WHERE id=$1 AND plan_id=$2`, memberID, planID, event.CreatedAt); err != nil {
+	if _, err := tx.Exec(ctx, `UPDATE plan_members SET status='removed',concurrency_base=0,concurrency_max=0,removed_at=$3,updated_at=$3 WHERE id=$1 AND plan_id=$2`, memberID, planID, event.CreatedAt); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `UPDATE api_key_plans r SET enabled=false FROM api_keys k WHERE r.api_key_id=k.id AND r.plan_id=$1 AND k.user_id=$2`, planID, targetUserID); err != nil {

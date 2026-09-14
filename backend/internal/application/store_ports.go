@@ -20,6 +20,7 @@ type Store interface {
 	GatewayStore
 	MembershipStore
 	PricingStore
+	ConcurrencyStore
 }
 
 type PricingStore interface {
@@ -157,4 +158,12 @@ type GatewayStore interface {
 	RecordProbedAccountQuotaSignals(context.Context, string, string, int64, []domain.QuotaSignal, time.Time) error
 	RecordQuotaResetSignals(context.Context, string, string, int64, []domain.QuotaSignal, time.Time) error
 	RecordGatewayMetric(context.Context, domain.GatewayMetric) error
+}
+
+// ConcurrencyStore separates history and allocation from token accounting.
+type ConcurrencyStore interface {
+	PlanConcurrencyContext(context.Context, string, string) (domain.PlanConcurrencyContext, error)
+	UpdatePlanConcurrency(context.Context, string, string, domain.ConcurrencyPolicy, domain.AuditEvent) error
+	SaveConcurrencyMinutes(context.Context, []domain.ConcurrencyMinute) error
+	ConcurrencyMinutes(context.Context, string, string, int64, time.Time, time.Time) ([]domain.ConcurrencyMinute, error)
 }

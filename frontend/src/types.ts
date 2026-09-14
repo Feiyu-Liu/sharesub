@@ -548,3 +548,25 @@ export interface NotificationList {
 
 export interface UpdatedCount { updated_count: number }
 export interface APIError { error: { code: string; message: string } }
+
+
+export interface MemberConcurrencyLimit {
+  user_id: string
+  username: string
+  base_limit: number
+  max_concurrency: number
+}
+export interface ConcurrencyPolicy {
+  enabled: boolean
+  members: MemberConcurrencyLimit[]
+}
+export interface PlanConcurrency {
+  account_id: string
+  account_max: number
+  policy: ConcurrencyPolicy
+  current: number
+  peak: number
+  updated_at: string
+  points: { bucket_start: string; observed_seconds: number; average: number; peak: number }[]
+  members: { user_id: string; username: string; current: number; average: number[] }[]
+}

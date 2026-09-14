@@ -275,6 +275,29 @@ func (s *Store) UpdateAccountConfig(ctx context.Context, userID string, account 
 	if err != nil {
 		return domain.Account{}, mapError(err)
 	}
+
+	rows, err := tx.Query(ctx, `SELECT id FROM shared_plans WHERE account_id=$1`, account.ID)
+	if err != nil {
+		return domain.Account{}, err
+	}
+	var boundPlans []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			rows.Close()
+			return domain.Account{}, err
+		}
+		boundPlans = append(boundPlans, id)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return domain.Account{}, err
+	}
+	for _, id := range boundPlans {
+		if err := validatePlanConcurrencyCapacity(ctx, tx, id, account.MaxConcurrency); err != nil {
+			return domain.Account{}, err
+		}
+	}
 	if err := insertAuditEvent(ctx, tx, event); err != nil {
 		return domain.Account{}, err
 	}

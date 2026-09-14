@@ -87,6 +87,8 @@
       <p v-else class="analytics-empty">{{ performancePeriodLabel }}还没有成员使用记录。</p>
     </section>
 
+    <PlanConcurrencyPanel :plan-id="planId" :admin-mode="adminMode" :can-manage="canRefresh" :theme="theme" :member-order="insights.recent_usage.map(member => member.username)" />
+
     <section class="quota-section">
       <header class="panel-heading quota-heading">
         <div>
@@ -272,6 +274,7 @@ import { formatMilliseconds, formatTokens } from '../dashboardFormat'
 import UserAvatar from './UserAvatar.vue'
 import MemberCostShareChart from './MemberCostShareChart.vue'
 import MemberUsageChart from './MemberUsageChart.vue'
+import PlanConcurrencyPanel from './PlanConcurrencyPanel.vue'
 import ModelDistributionChart from './ModelDistributionChart.vue'
 import PlanErrorDetailsModal from './PlanErrorDetailsModal.vue'
 import QuotaResetControls from './QuotaResetControls.vue'

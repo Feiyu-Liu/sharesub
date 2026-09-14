@@ -126,6 +126,10 @@ func writeError(w http.ResponseWriter, err error) {
 		writeErrorStatus(w, 503, "no_route_available", err.Error())
 	case errors.Is(err, domain.ErrPublicPlanFull):
 		writeErrorStatus(w, 409, "public_plan_full", err.Error())
+	case errors.Is(err, domain.ErrConcurrencyConfiguration):
+		writeErrorStatus(w, 400, "concurrency_configuration_invalid", err.Error())
+	case errors.Is(err, domain.ErrMemberConcurrency):
+		writeErrorStatus(w, 429, "member_concurrency_limited", err.Error())
 	case errors.Is(err, domain.ErrAccountConcurrency):
 		writeErrorStatus(w, 429, "account_concurrency_limited", err.Error())
 	case errors.Is(err, domain.ErrAccountRateLimited):
@@ -155,6 +159,10 @@ func writeGatewayDomainError(w http.ResponseWriter, err error) {
 		writeGatewayErrorStatus(w, http.StatusUnauthorized, "authentication_error", err.Error())
 	case errors.Is(err, domain.ErrQuotaExhausted):
 		writeGatewayErrorStatus(w, http.StatusTooManyRequests, "quota_exhausted", err.Error())
+	case errors.Is(err, domain.ErrConcurrencyConfiguration):
+		writeGatewayErrorStatus(w, 503, "concurrency_configuration_invalid", err.Error())
+	case errors.Is(err, domain.ErrMemberConcurrency):
+		writeGatewayErrorStatus(w, 429, "member_concurrency_limited", err.Error())
 	case errors.Is(err, domain.ErrAccountConcurrency):
 		writeGatewayErrorStatus(w, http.StatusTooManyRequests, "account_concurrency_limited", err.Error())
 	case errors.Is(err, domain.ErrAccountRateLimited):

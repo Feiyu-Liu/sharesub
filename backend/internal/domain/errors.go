@@ -29,6 +29,8 @@ var (
 	ErrAccountTokenRefresh       = errors.New("OpenAI account token refresh failed")
 	ErrNoRouteAvailable          = errors.New("no configured Plan has available quota")
 	ErrPublicPlanFull            = errors.New("public Plan has no available seats")
+	ErrMemberConcurrency         = errors.New("member concurrency limit or shared concurrency pool reached")
+	ErrConcurrencyConfiguration  = errors.New("concurrency allocation requires a finite account limit covering all reserved slots")
 	ErrAccountConcurrency        = errors.New("OpenAI account concurrency limit reached")
 	ErrAccountRateLimited        = errors.New("OpenAI account RPM limit reached")
 	ErrAccountAlreadyBound       = fmt.Errorf("OpenAI account is already bound to another Plan: %w", ErrConflict)

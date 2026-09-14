@@ -200,7 +200,7 @@ func (s *Store) ReviewJoinApplication(ctx context.Context, ownerID, expectedPlan
 		err = tx.QueryRow(ctx, `
 			INSERT INTO plan_members(id,plan_id,user_id,role,status,share_basis_points,created_at,updated_at,removed_at)
 			VALUES($1,$2,$3,$4,$5,$6,$7,$7,NULL)
-			ON CONFLICT(plan_id,user_id) DO UPDATE SET role='member',status='active',share_basis_points=EXCLUDED.share_basis_points,usd_limit_micros=NULL,removed_at=NULL,updated_at=EXCLUDED.updated_at
+			ON CONFLICT(plan_id,user_id) DO UPDATE SET role='member',status='active',share_basis_points=EXCLUDED.share_basis_points,usd_limit_micros=NULL,concurrency_base=0,concurrency_max=0,removed_at=NULL,updated_at=EXCLUDED.updated_at
 			RETURNING id`, memberID, application.PlanID, application.UserID, domain.RoleMember, domain.StatusActive, share, now).Scan(&actualMemberID)
 		if err != nil {
 			return domain.JoinApplication{}, mapError(err)
@@ -327,7 +327,7 @@ func (s *Store) AcceptInvite(ctx context.Context, tokenHash []byte, user domain.
 	err = tx.QueryRow(ctx, `
 		INSERT INTO plan_members(id,plan_id,user_id,role,status,share_basis_points,created_at,updated_at,removed_at)
 		VALUES($1,$2,$3,$4,$5,$6,$7,$7,NULL)
-		ON CONFLICT(plan_id,user_id) DO UPDATE SET role='member',status='active',share_basis_points=EXCLUDED.share_basis_points,usd_limit_micros=NULL,removed_at=NULL,updated_at=EXCLUDED.updated_at
+		ON CONFLICT(plan_id,user_id) DO UPDATE SET role='member',status='active',share_basis_points=EXCLUDED.share_basis_points,usd_limit_micros=NULL,concurrency_base=0,concurrency_max=0,removed_at=NULL,updated_at=EXCLUDED.updated_at
 		RETURNING id,created_at`, member.ID, member.PlanID, member.UserID, member.Role, member.Status, member.ShareBasisPoints, member.CreatedAt).Scan(&member.ID, &member.CreatedAt)
 	if err != nil {
 		return domain.Member{}, mapError(err)

@@ -1,4 +1,6 @@
 import type {
+  PlanConcurrency,
+  ConcurrencyPolicy,
   AuditEvent,
   CreatedInvite,
   InvitePreview,
@@ -25,6 +27,8 @@ function browserTimezone() {
 }
 
 export const planAPI = {
+  planConcurrency: (id: string, signal?: AbortSignal) => request<PlanConcurrency>(`/api/plans/${id}/concurrency`, { signal }),
+  updatePlanConcurrency: (id: string, policy: ConcurrencyPolicy) => request<{ updated: boolean }>(`/api/plans/${id}/concurrency`, { method: 'PUT', body: JSON.stringify(policy) }),
   plans: () => request<Plan[]>('/api/plans'),
   createPlan: (payload: { account_id: string; name: string; allocation_mode: PlanAllocationMode; owner_share_basis_points: number }) => request<PlanDetail>('/api/plans', { method: 'POST', body: JSON.stringify(payload) }),
   plan: (id: string) => request<PlanDetail>(`/api/plans/${id}?timezone=${encodeURIComponent(browserTimezone())}`),

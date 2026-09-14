@@ -197,7 +197,7 @@ func (s *Service) ResolveGatewayAccess(ctx context.Context, apiKey string, exclu
 		var commit func()
 		var release func()
 		if s.traffic != nil {
-			commit, release, err = s.traffic.prepare(credential.Account.ID, credential.Account.MaxConcurrency, credential.Account.RPMLimit, s.now())
+			commit, release, err = s.traffic.prepareGateway(credential, s.now())
 			if err != nil {
 				limitErr = err
 				continue
@@ -267,7 +267,7 @@ func (s *Service) ReacquireGatewayAccess(ctx context.Context, apiKey string, pin
 	var commit func()
 	var release func()
 	if s.traffic != nil {
-		commit, release, err = s.traffic.prepare(credential.Account.ID, credential.Account.MaxConcurrency, credential.Account.RPMLimit, s.now())
+		commit, release, err = s.traffic.prepareGateway(credential, s.now())
 		if err != nil {
 			return GatewayAccess{}, err
 		}

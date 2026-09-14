@@ -3,8 +3,10 @@
 import { mount } from '@vue/test-utils'
 import { readFileSync } from 'node:fs'
 import { NSelect } from 'naive-ui'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import PlanInsights from './PlanInsights.vue'
+
+vi.mock('./PlanConcurrencyPanel.vue', () => ({ default: { template: '<section data-testid="concurrency-panel" />' } }))
 
 const planInsightsSource = readFileSync('src/components/PlanInsights.vue', 'utf8')
 

@@ -33,6 +33,17 @@ type CleanupResult struct {
 
 func (s *Store) CleanupResources(ctx context.Context, now time.Time, policy RetentionPolicy) (CleanupResult, error) {
 	var result CleanupResult
+	for {
+		tag, err := s.pool.Exec(ctx, `WITH expired AS (
+            SELECT ctid FROM account_concurrency_minutes WHERE bucket_start<$1 ORDER BY bucket_start LIMIT $2 FOR UPDATE SKIP LOCKED
+        ) DELETE FROM account_concurrency_minutes WHERE ctid IN (SELECT ctid FROM expired)`, now.Add(-48*time.Hour), cleanupBatchSize)
+		if err != nil {
+			return result, err
+		}
+		if tag.RowsAffected() < cleanupBatchSize {
+			break
+		}
+	}
 	// Keep the boundary UTC day as raw metrics. Daily rollups cannot represent a
 	// partial-day ranking window without including data outside that window.
 	metricCutoff := gatewayMetricCutoff(now, policy.GatewayMetrics)

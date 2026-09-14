@@ -1,4 +1,6 @@
 import type {
+  PlanConcurrency,
+  ConcurrencyPolicy,
   AccountConfigInput,
   Account,
   AdminAPIKey,
@@ -29,6 +31,8 @@ function browserTimezone() {
 }
 
 export const adminAPI = {
+  adminPlanConcurrency: (id: string, signal?: AbortSignal) => request<PlanConcurrency>(`/api/admin/plans/${id}/concurrency`, { signal }),
+  adminUpdatePlanConcurrency: (id: string, policy: ConcurrencyPolicy) => request<{ updated: boolean }>(`/api/admin/plans/${id}/concurrency`, { method: 'PUT', body: JSON.stringify(policy) }),
   adminOverview: () => request<AdminOverview>('/api/admin/overview'),
   adminUsers: () => request<AdminUser[]>('/api/admin/users'),
   adminUpdateUserStatus: (id: string, status: 'active' | 'disabled') => request<User>(`/api/admin/users/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
