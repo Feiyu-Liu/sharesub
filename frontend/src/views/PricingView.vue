@@ -143,7 +143,7 @@ const historySearch = ref('')
 const editing = computed(() => draft.value !== null)
 const displayed = computed(() => draft.value || current.value?.config)
 const primaryFields = tokenPriceFields.slice(0, 4)
-const featuredModels = ['gpt-6-astra', 'gpt-6-sol', 'gpt-6-luna', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.3-codex', 'gpt-5.3-codex-spark', 'codex-auto-review', 'gpt-5.2', 'gpt-image-1', 'gpt-image-1.5', 'gpt-image-2']
+const featuredModels = ['gpt-6-astra', 'gpt-6.1-sol', 'gpt-6-sol', 'gpt-6-luna', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.3-codex', 'gpt-5.3-codex-spark', 'codex-auto-review', 'gpt-5.2', 'gpt-image-1', 'gpt-image-1.5', 'gpt-image-2']
 const filteredModels = computed(() => {
   if (!displayed.value) return []
   return displayed.value.models.filter(model => model.model.includes(search.value.trim().toLowerCase())).slice().sort((left, right) => {

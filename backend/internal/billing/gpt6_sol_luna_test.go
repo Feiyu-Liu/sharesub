@@ -18,6 +18,7 @@ func TestGPT6SolLunaStandardPricesAndLongContext(t *testing.T) {
 	}{
 		{"gpt-6-sol", 269_000, 613_000, 1_176_004},
 		{"gpt-6-luna", 13_450, 30_650, 58_800},
+		{"gpt-6.1-sol", 267_000, 611_000, 1_172_004},
 	} {
 		for _, test := range []struct {
 			name        string
@@ -39,17 +40,37 @@ func TestGPT6SolLunaStandardPricesAndLongContext(t *testing.T) {
 				}
 			})
 		}
-		for _, alias := range []string{"openai/" + model.name, model.name + "-2026-09-22"} {
+		aliases := []string{"openai/" + model.name}
+		if model.name == "gpt-6.1-sol" {
+			aliases = append(aliases, model.name+"-max", model.name+"-openai-compact")
+		} else {
+			aliases = append(aliases, model.name+"-2026-09-22")
+		}
+		for _, alias := range aliases {
 			price, ok := ConfigModel(config, alias)
 			if !ok || price.Model != model.name {
 				t.Fatalf("alias %s resolved to %+v", alias, price)
 			}
 		}
 	}
-	for _, name := range []string{"gpt-6-other", "gpt-6-solar", "gpt-6-lunar"} {
+	for _, name := range []string{"gpt-6-other", "gpt-6-solar", "gpt-6-lunar", "gpt-6.1-sol-preview", "gpt-6.1-sol-foo"} {
 		if _, ok := ConfigModel(config, name); ok {
 			t.Fatalf("unrelated model %s acquired a price", name)
 		}
+	}
+}
+
+func TestGPT61PricingMigrationMatchesCatalog(t *testing.T) {
+	body, err := migrations.Files.ReadFile("039_gpt61_sol_pricing.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(body), `"gpt-6.1-sol"`) {
+		t.Fatal("migration does not contain GPT-6.1 Sol")
+	}
+	price, ok := ConfigModel(EmbeddedPricingConfig(), "gpt-6.1-sol")
+	if !ok || price.Standard.CacheRead != 100_000 {
+		t.Fatalf("unexpected GPT-6.1 Sol price: %+v", price)
 	}
 }
 

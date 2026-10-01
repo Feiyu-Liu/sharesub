@@ -29,7 +29,7 @@ func TestInitialPricingMigrationMatchesEmbeddedCatalog(t *testing.T) {
 	embedded := EmbeddedPricingConfig()
 	var initialModels []domain.ModelPrice
 	for _, model := range embedded.Models {
-		if model.Model != "gpt-6-sol" && model.Model != "gpt-6-luna" {
+		if model.Model != "gpt-6.1-sol" && model.Model != "gpt-6-sol" && model.Model != "gpt-6-luna" {
 			initialModels = append(initialModels, model)
 		}
 	}

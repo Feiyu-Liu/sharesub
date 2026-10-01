@@ -16,6 +16,7 @@ ShareSub 复用 sub2api 已验证的 OpenAI Codex 协议行为，但产品边界
 | 独立联网检索 | 支持三个入口的 `/alpha/search`，按 SearchClient JSON 协议转发到 ChatGPT Codex alpha search 上游 |
 | 模型列表 | 普通请求返回支持配置的模型；Codex `client_version` 请求通过所选 OAuth 账号透传实时 manifest 与 ETag |
 | GPT-6 Astra | 静态模型列表提供官方 ID `gpt-6-astra`；Responses 请求按官方兼容规则移除不支持的采样/logprobs 参数，并将 `none`、`minimal` reasoning effort 规范为 `low` |
+| GPT-6.1 Sol | 静态模型列表提供官方 ID `gpt-6.1-sol`；Responses、compact 和 WebSocket 拒绝不支持的 `none`、`minimal` reasoning effort，并按模型定价单独计费 |
 | Images API | 支持 `/v1/images/generations`、`/v1/images/edits` 及无 `/v1` 别名；OAuth 请求转换为 hosted `image_generation` 工具 |
 | 图片输入输出 | 生成支持 JSON；编辑支持 JSON 图片 URL、multipart 图片与 mask；响应支持 JSON 和 Images SSE |
 | 图片模型 | `/v1/models` 返回 `gpt-image-1`、`gpt-image-1.5`、`gpt-image-2` |

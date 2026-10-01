@@ -249,6 +249,10 @@ func canonicalModel(model string) string {
 
 func knownCodexFamily(model string) string {
 	switch {
+	case model == "gpt-6.1-sol":
+		return "gpt-6.1-sol"
+	case strings.HasPrefix(model, "gpt-6.1-sol-") && isGPT61SolSuffix(strings.TrimPrefix(model, "gpt-6.1-sol-")):
+		return "gpt-6.1-sol"
 	case model == "gpt-6-sol" || strings.HasPrefix(model, "gpt-6-sol-"):
 		return "gpt-6-sol"
 	case model == "gpt-6-luna" || strings.HasPrefix(model, "gpt-6-luna-"):
@@ -293,5 +297,14 @@ func knownCodexFamily(model string) string {
 		return "gpt-5.4"
 	default:
 		return ""
+	}
+}
+
+func isGPT61SolSuffix(suffix string) bool {
+	switch suffix {
+	case "none", "minimal", "low", "medium", "high", "xhigh", "max", "openai-compact":
+		return true
+	default:
+		return false
 	}
 }
