@@ -302,7 +302,14 @@ func isResponsesWebSocketTokenEvent(frame []byte, eventType string) bool {
 }
 
 func PrepareResponsesWebSocketFingerprint(config *ResponsesWebSocketDialConfig, frame []byte, promptCacheKey string) ([]byte, error) {
-	if config == nil || strings.TrimSpace(config.InternalAccountID) == "" {
+	if config == nil {
+		return frame, nil
+	}
+	frame, err := rewriteRequestLocale(frame, config.RequestTimezone)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(config.InternalAccountID) == "" {
 		return frame, nil
 	}
 	sessionID := ClientCodexSessionID(config.InboundHeader, promptCacheKey)
@@ -339,6 +346,7 @@ func responsesWebSocketHeaders(config ResponsesWebSocketDialConfig, promptCacheK
 			}
 		}
 	}
+	applyRequestLocaleHeaders(headers, config.RequestTimezone)
 	sessionID := strings.TrimSpace(config.InboundHeader.Get("session_id"))
 	conversationID := strings.TrimSpace(config.InboundHeader.Get("conversation_id"))
 	if sessionID == "" && conversationID != "" {

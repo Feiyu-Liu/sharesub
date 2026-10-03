@@ -2,13 +2,15 @@
 
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
+import { NSelect } from 'naive-ui'
 import { updateAccountText } from './accountConfigForm'
+import { requestTimezones } from './requestTimezone'
 import type { AccountConfigInput } from './types'
 import AccountConfigFields from './components/AccountConfigFields.vue'
 
 const modelValue: AccountConfigInput = {
   name: '团队主账号', notes: '共享账号', proxy_url: 'http://127.0.0.1:7890',
-  max_concurrency: 2, rpm_limit: 60, fast_policy: [], codex_fingerprint_mode: 'session', state_enabled: false, status: 'active',
+  max_concurrency: 2, rpm_limit: 60, fast_policy: [], codex_fingerprint_mode: 'session', state_enabled: false, request_timezone: '', status: 'active',
 }
 
 describe('AccountConfigFields', () => {
@@ -42,6 +44,15 @@ describe('AccountConfigFields', () => {
       }],
     })
   })
+})
+
+it('keeps request timezone rewriting off by default and emits the selected zone', async () => {
+  const wrapper = mount(AccountConfigFields, { props: { modelValue } })
+  const select = wrapper.findAllComponents(NSelect).find(candidate => candidate.props('options') === requestTimezones)!
+  expect(select.props('value')).toBe('')
+  select.vm.$emit('update:value', 'Asia/Singapore')
+  expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([{ ...modelValue, request_timezone: 'Asia/Singapore' }])
+  expect(requestTimezones.map(option => option.value)).not.toContain('Asia/Shanghai')
 })
 
 it('keeps STATE off by default and emits an explicit opt-in', async () => {

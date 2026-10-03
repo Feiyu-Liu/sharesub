@@ -32,6 +32,10 @@ func normalizeAccountConfig(config AccountConfigInput) (AccountConfigInput, erro
 	config.Name = strings.TrimSpace(config.Name)
 	config.Notes = strings.TrimSpace(config.Notes)
 	config.ProxyURL = strings.TrimSpace(config.ProxyURL)
+	config.RequestTimezone = strings.TrimSpace(config.RequestTimezone)
+	if config.RequestTimezone != "" && !domain.IsRequestTimezone(config.RequestTimezone) {
+		return AccountConfigInput{}, domain.ErrInvalidInput
+	}
 	if config.FastPolicy == nil {
 		config.FastPolicy = make([]domain.FastPolicyRule, 0)
 	}

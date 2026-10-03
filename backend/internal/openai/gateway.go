@@ -419,10 +419,11 @@ func hasRequiredQuotaWindows(signals []domain.QuotaSignal) bool {
 }
 
 type CodexFingerprintContext struct {
-	AccountID    string
-	Mode         string
-	StateEnabled bool
-	StateScope   string
+	AccountID       string
+	Mode            string
+	StateEnabled    bool
+	StateScope      string
+	RequestTimezone string
 }
 
 func (g *Gateway) Forward(ctx context.Context, inbound *http.Request, body []byte, metadata RequestBilling, accessToken, chatGPTAccountID, apiKeyID, proxyURL string, fingerprintContext ...CodexFingerprintContext) (*http.Response, error) {
@@ -455,6 +456,11 @@ func (g *Gateway) Forward(ctx context.Context, inbound *http.Request, body []byt
 		}
 		body, err = ApplyCodexFingerprintBody(body, fingerprint)
 		if err != nil {
+			return nil, err
+		}
+	}
+	if fingerprintConfigured && !images {
+		if body, err = rewriteRequestLocale(body, fingerprintContext[0].RequestTimezone); err != nil {
 			return nil, err
 		}
 	}
@@ -493,6 +499,9 @@ func (g *Gateway) Forward(ctx context.Context, inbound *http.Request, body []byt
 	}
 	applyCodexOAuthIdentity(req.Header, "")
 	applyCodexRoutingHint(req.Header, metadata.Model, metadata.ServiceTier)
+	if fingerprintConfigured && !images {
+		applyRequestLocaleHeaders(req.Header, fingerprintContext[0].RequestTimezone)
+	}
 
 	clientConversationID := strings.TrimSpace(req.Header.Get("Conversation_Id"))
 	seed := clientSessionID

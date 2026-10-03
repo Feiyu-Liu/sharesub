@@ -345,6 +345,7 @@ func (s *Service) CompleteOpenAIConnect(ctx context.Context, userID, state, code
 		MaxConcurrency: config.MaxConcurrency, RPMLimit: config.RPMLimit, FastPolicy: config.FastPolicy,
 		CodexFingerprintMode: config.CodexFingerprintMode,
 		StateEnabled:         config.StateEnabled,
+		RequestTimezone:      config.RequestTimezone,
 		TokenExpiresAt:       token.ExpiresAt, Status: config.Status, CreatedAt: s.now(),
 	}
 	if err := s.setAccountProxy(&account, config.ProxyURL); err != nil {
@@ -478,6 +479,7 @@ func (s *Service) updateAccountConfig(ctx context.Context, actorUserID, ownerUse
 	account.FastPolicy = config.FastPolicy
 	account.CodexFingerprintMode = config.CodexFingerprintMode
 	account.StateEnabled = config.StateEnabled
+	account.RequestTimezone = config.RequestTimezone
 	account.Status = config.Status
 	if err := s.setAccountProxy(&account, config.ProxyURL); err != nil {
 		return domain.Account{}, err

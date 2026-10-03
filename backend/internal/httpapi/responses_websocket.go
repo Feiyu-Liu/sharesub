@@ -200,7 +200,7 @@ func (s *Server) responsesWebSocketHandler(w http.ResponseWriter, r *http.Reques
 		dial := &openai.ResponsesWebSocketDialConfig{
 			AccessToken: access.AccessToken, ChatGPTAccountID: access.Credential.Account.ChatGPTAccountID,
 			APIKeyID: access.Credential.APIKeyID, InternalAccountID: access.Credential.Account.ID,
-			FingerprintMode: access.Credential.Account.CodexFingerprintMode, ProxyURL: access.ProxyURL, InboundHeader: r.Header,
+			FingerprintMode: access.Credential.Account.CodexFingerprintMode, RequestTimezone: access.Credential.Account.RequestTimezone, ProxyURL: access.ProxyURL, InboundHeader: r.Header,
 			Model: policyBilling.Model, ServiceTier: policyBilling.ServiceTier,
 		}
 		policyFrame, fingerprintErr := openai.PrepareResponsesWebSocketFingerprint(dial, policyFrame, request.Billing.PromptCacheKey)
@@ -457,7 +457,7 @@ func responsesWebSocketTurnConfig(access application.GatewayAccess, frame []byte
 		Dial: &openai.ResponsesWebSocketDialConfig{
 			AccessToken: access.AccessToken, ChatGPTAccountID: access.Credential.Account.ChatGPTAccountID,
 			APIKeyID: access.Credential.APIKeyID, InternalAccountID: access.Credential.Account.ID,
-			FingerprintMode: access.Credential.Account.CodexFingerprintMode, ProxyURL: access.ProxyURL, InboundHeader: inboundHeader,
+			FingerprintMode: access.Credential.Account.CodexFingerprintMode, RequestTimezone: access.Credential.Account.RequestTimezone, ProxyURL: access.ProxyURL, InboundHeader: inboundHeader,
 			Model: metadata.Model, ServiceTier: metadata.ServiceTier,
 		},
 	}

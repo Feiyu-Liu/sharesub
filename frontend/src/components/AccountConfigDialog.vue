@@ -53,7 +53,7 @@ const emit = defineEmits<{
 const config = ref<AccountConfigInput>(emptyConfig())
 
 function emptyConfig(): AccountConfigInput {
-  return { name: '', notes: '', proxy_url: '', max_concurrency: 0, rpm_limit: 0, fast_policy: [], codex_fingerprint_mode: 'off', state_enabled: false, status: 'active' }
+  return { name: '', notes: '', proxy_url: '', max_concurrency: 0, rpm_limit: 0, fast_policy: [], codex_fingerprint_mode: 'off', state_enabled: false, request_timezone: '', status: 'active' }
 }
 
 watch(() => props.account, (account) => {
@@ -70,6 +70,7 @@ watch(() => props.account, (account) => {
     fast_policy: account.fast_policy.map(rule => ({ ...rule, user_ids: [...rule.user_ids], model_whitelist: [...rule.model_whitelist] })),
     codex_fingerprint_mode: account.codex_fingerprint_mode,
     state_enabled: account.state_enabled,
+    request_timezone: account.request_timezone,
     status: account.status,
   }
 }, { immediate: true })
