@@ -212,7 +212,7 @@ func TestGatewayContextsHandleClientCancellation(t *testing.T) {
 }
 
 func TestGatewayAttemptDetachesClientCancellationAfterResponseAcceptance(t *testing.T) {
-	parent, cancelParent := context.WithCancel(context.Background())
+	parent, cancelParent := context.WithTimeout(context.Background(), time.Minute)
 	attemptCtx, cancelAttempt, acceptUpstream := upstreamAttemptContext(parent)
 	defer cancelAttempt()
 	if !acceptUpstream() {
@@ -226,7 +226,7 @@ func TestGatewayAttemptDetachesClientCancellationAfterResponseAcceptance(t *test
 	case <-time.After(10 * time.Millisecond):
 	}
 	deadline, ok := attemptCtx.Deadline()
-	if !ok || time.Until(deadline) <= 0 || time.Until(deadline) > gatewayUpstreamTimeout {
+	if ok {
 		t.Fatalf("upstream deadline = %v, ok = %t", deadline, ok)
 	}
 	cancelAttempt()

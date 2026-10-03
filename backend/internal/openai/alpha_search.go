@@ -102,6 +102,7 @@ func (g *Gateway) ForwardAlphaSearch(ctx context.Context, inbound *http.Request,
 	if err != nil {
 		return nil, fmt.Errorf("forward Codex alpha search request: %w", err)
 	}
+	resp.Body = &idleTimeoutBody{body: resp.Body, timeout: upstreamBodyIdleTimeout}
 	return resp, nil
 }
 

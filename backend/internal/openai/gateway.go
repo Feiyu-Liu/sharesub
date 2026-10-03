@@ -540,6 +540,11 @@ func (g *Gateway) Forward(ctx context.Context, inbound *http.Request, body []byt
 	if err != nil {
 		return nil, fmt.Errorf("forward Codex request: %w", err)
 	}
+	idleTimeout := upstreamBodyIdleTimeout
+	if images {
+		idleTimeout = imageBodyIdleTimeout
+	}
+	resp.Body = &idleTimeoutBody{body: resp.Body, timeout: idleTimeout}
 	g.watchState(resp, metadata.Model, stateReceipt, compact || images, fingerprintContext)
 	if timing, ok := req.Context().Value(attemptTimingKey{}).(*attemptTiming); ok {
 		resp.Request = req

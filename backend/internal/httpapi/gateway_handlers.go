@@ -555,14 +555,14 @@ func shouldSwitchUpstreamAccount(status int) bool {
 }
 
 const gatewayMetricWriteTimeout = 5 * time.Second
-const gatewayUpstreamTimeout = 10 * time.Minute
 
 func upstreamAttemptContext(parent context.Context) (context.Context, context.CancelFunc, func() bool) {
-	ctx, cancelTimeout := context.WithTimeout(context.WithoutCancel(parent), gatewayUpstreamTimeout)
-	stopClientCancel := context.AfterFunc(parent, cancelTimeout)
+	// No overall deadline; follow client cancellation until response acceptance.
+	ctx, cancelAttempt := context.WithCancel(context.WithoutCancel(parent))
+	stopClientCancel := context.AfterFunc(parent, cancelAttempt)
 	cancel := func() {
 		stopClientCancel()
-		cancelTimeout()
+		cancelAttempt()
 	}
 	// A successful stop means response headers arrived before the client canceled.
 	// From that point onward the caller may drain the accepted upstream response

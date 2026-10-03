@@ -8,6 +8,8 @@ ShareSub 复用 sub2api 已验证的 OpenAI Codex 协议行为，但产品边界
 |---|---|
 | Responses HTTP 流式请求 | 转发 SSE，逐事件 flush，并记录终止事件 usage |
 | Responses HTTP 非流式请求 | 上游使用 SSE，网关在终止事件后返回标准 JSON response |
+| HTTP 上游请求总时长 | Responses（含 compact）、Images 与 Alpha Search 不设置整体截止时间；响应头到达前跟随客户端取消，接受上游响应后独立读取并记账；连接、响应头与首输出超时按各自规则处理 |
+| HTTP 上游响应体空闲超时 | 每次等待响应体数据最多 180 秒，Images 为 900 秒；读取到数据后重新计时，拒绝响应排空也受保护；不计入下游写入耗时 |
 | Responses WebSocket v2 | 三个 Responses 入口都支持 `GET` + WebSocket Upgrade；客户端与 ChatGPT Codex 上游保持端到端 WebSocket，一条连接内可串行执行多个 `response.create` turn |
 | WebSocket 会话与并发 | 连接绑定首次选定的账号并跨 turn 复用上游连接；账号并发和 RPM 按 turn 获取，终止事件后立即释放，轮间空闲不占账号业务并发 |
 | WebSocket 资源边界 | 首包默认等待 30 秒，轮间默认空闲 5 分钟，会话最长 1 小时；单实例中每个用户 API Key 最多 64 条连接，客户端与上游单条消息默认限制为 64 MiB 和 16 MiB |
