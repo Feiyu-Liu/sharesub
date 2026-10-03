@@ -55,6 +55,7 @@ type ResponsesWebSocketDialConfig struct {
 	APIKeyID          string
 	InternalAccountID string
 	FingerprintMode   string
+	RequestTimezone   string
 	Fingerprint       *CodexFingerprint
 	ProxyURL          string
 	InboundHeader     http.Header

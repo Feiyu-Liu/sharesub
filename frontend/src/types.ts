@@ -128,6 +128,7 @@ export interface Account {
   fast_policy: FastPolicyRule[]
   codex_fingerprint_mode: 'off' | 'device' | 'session' | 'full'
   state_enabled: boolean
+  request_timezone: RequestTimezone
   token_expires_at: string
   status: AccountStatus
   last_error?: string
@@ -156,6 +157,7 @@ export interface AccountConfigInput {
   fast_policy: FastPolicyRule[]
   codex_fingerprint_mode: 'off' | 'device' | 'session' | 'full'
   state_enabled: boolean
+  request_timezone: RequestTimezone
   status: AccountStatus
 }
 
@@ -585,3 +587,5 @@ export interface CodexStateStatus {
     attempts: number
   }>
 }
+
+export type RequestTimezone = '' | 'Asia/Singapore' | 'Asia/Tokyo' | 'Asia/Seoul' | 'America/Los_Angeles' | 'America/New_York' | 'Europe/London'

@@ -64,7 +64,7 @@ const account: Account = {
   max_concurrency: 0,
     rpm_limit: 0,
     fast_policy: [],
-  codex_fingerprint_mode: 'session', state_enabled: false,
+  codex_fingerprint_mode: 'session', state_enabled: false, request_timezone: '',
   token_expires_at: createdAt,
   status: 'active',
   created_at: createdAt,
@@ -987,6 +987,17 @@ describe('form interactions', () => {
     expect(wrapper.getComponent(AccountConfigFields).props('modelValue').codex_fingerprint_mode).toBe('session')
     await findButton(wrapper, '保存配置')!.trigger('click')
     expect(wrapper.emitted('save')?.[0]?.[0]).toMatchObject({ codex_fingerprint_mode: 'session' })
+    wrapper.unmount()
+  })
+
+  it('preserves an existing request timezone when saving other settings', async () => {
+    const wrapper = mount(AccountConfigDialog, {
+      props: { account: { ...account, request_timezone: 'Asia/Tokyo' } },
+      global: { stubs: { teleport: true } },
+    })
+    expect(wrapper.getComponent(AccountConfigFields).props('modelValue').request_timezone).toBe('Asia/Tokyo')
+    await findButton(wrapper, '保存配置')!.trigger('click')
+    expect(wrapper.emitted('save')?.[0]?.[0]).toMatchObject({ request_timezone: 'Asia/Tokyo' })
     wrapper.unmount()
   })
 

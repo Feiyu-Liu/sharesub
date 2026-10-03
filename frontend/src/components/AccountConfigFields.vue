@@ -19,6 +19,10 @@
           <label>Codex 指纹收敛<NSelect :value="modelValue.codex_fingerprint_mode" :options="codexFingerprintOptions" to="body" @update:value="updateFingerprintMode" /></label>
           <CodexFingerprintGuide :model-value="modelValue.codex_fingerprint_mode" />
         </div>
+        <div class="account-form-full account-form-field account-form-timezone">
+          <label>请求时区改写<NSelect :value="modelValue.request_timezone" :options="requestTimezones" to="body" @update:value="updateRequestTimezone" /></label>
+          <small>开启后，转发 Codex 请求时把环境上下文中的时区与当前日期、web_search 位置时区改为所选时区，并将客户端 Accept-Language 改为英文。不影响 Images 请求。</small>
+        </div>
         <div class="account-form-full account-form-state-toggle">
           <div><strong>启用 Codex 状态票据</strong><small>实验功能，仅 HTTP Responses：通过当前出口探测并验证 Pro / Team 状态票据。探测会消耗账号额度；失败时仍正常转发，不保证恢复模型能力。</small></div>
           <NSwitch aria-label="启用 Codex 状态票据" :value="modelValue.state_enabled" @update:value="updateStateEnabled" />
@@ -35,7 +39,8 @@ import { NInputNumber, NSelect, NSwitch } from 'naive-ui'
 import { BadgeInfo, Gauge } from 'lucide-vue-next'
 import { updateAccountText, type AccountTextField } from '../accountConfigForm'
 import { codexFingerprintOptions, type CodexFingerprintMode } from '../codexFingerprint'
-import type { AccountConfigInput, AccountStatus, FastPolicyRule } from '../types'
+import { requestTimezones } from '../requestTimezone'
+import type { AccountConfigInput, AccountStatus, FastPolicyRule, RequestTimezone } from '../types'
 import AppInput from './AppInput.vue'
 import CodexFingerprintGuide from './CodexFingerprintGuide.vue'
 import FastPolicyFields from './FastPolicyFields.vue'
@@ -65,6 +70,10 @@ function updateFingerprintMode(value: CodexFingerprintMode) {
   emit('update:modelValue', { ...props.modelValue, codex_fingerprint_mode: value })
 }
 
+function updateRequestTimezone(value: RequestTimezone) {
+  emit('update:modelValue', { ...props.modelValue, request_timezone: value })
+}
+
 function updateStateEnabled(value: boolean) {
   emit('update:modelValue', { ...props.modelValue, state_enabled: value })
 }
@@ -78,4 +87,5 @@ function updateFastPolicy(fastPolicy: FastPolicyRule[]) {
 .account-form-state-toggle { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .account-form-state-toggle > div { display: grid; gap: 6px; }
 .account-form-state-toggle small { color: var(--muted); line-height: 1.6; }
+.account-form-timezone small { color: var(--muted); line-height: 1.6; }
 </style>

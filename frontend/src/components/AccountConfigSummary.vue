@@ -13,6 +13,7 @@
         <dt><Fingerprint :size="15" />Codex 指纹收敛</dt>
         <dd><strong>{{ codexFingerprintMode(account.codex_fingerprint_mode).label }}</strong><CodexFingerprintGuide :model-value="account.codex_fingerprint_mode" /></dd>
       </div>
+      <div><dt><Globe :size="15" />请求时区改写</dt><dd>{{ requestTimezoneLabel(account.request_timezone) }}</dd></div>
       <div>
         <dt>
           <Gauge :size="15" />
@@ -91,8 +92,9 @@
 
 <script setup lang="ts">
 import { NAlert, NTag, NTooltip } from 'naive-ui'
-import { ArrowRight, Boxes, CalendarRange, CircleHelp, Fingerprint, Gauge, ListOrdered, Mail, Network, Sparkles, TimerReset, Users, Zap } from 'lucide-vue-next'
+import { ArrowRight, Boxes, CalendarRange, CircleHelp, Fingerprint, Gauge, Globe, ListOrdered, Mail, Network, Sparkles, TimerReset, Users, Zap } from 'lucide-vue-next'
 import { codexFingerprintMode } from '../codexFingerprint'
+import { requestTimezoneLabel } from '../requestTimezone'
 import type { Account, FastPolicyAction, FastPolicyTier, Member } from '../types'
 import CodexFingerprintGuide from './CodexFingerprintGuide.vue'
 import StatusBadge from './StatusBadge.vue'

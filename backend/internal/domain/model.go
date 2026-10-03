@@ -189,6 +189,7 @@ type Account struct {
 	FastPolicy             []FastPolicyRule `json:"fast_policy"`
 	CodexFingerprintMode   string           `json:"codex_fingerprint_mode"`
 	StateEnabled           bool             `json:"state_enabled"`
+	RequestTimezone        string           `json:"request_timezone"`
 	TokenExpiresAt         time.Time        `json:"token_expires_at"`
 	Status                 string           `json:"status"`
 	LastError              string           `json:"last_error,omitempty"`

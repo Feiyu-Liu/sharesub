@@ -370,6 +370,8 @@ func TestNormalizeAccountConfigRejectsUnsupportedValues(t *testing.T) {
 		{Name: "账号", RPMLimit: 10_001, Status: domain.StatusActive},
 		{Name: "账号", Status: "unknown"},
 		{Name: "账号", CodexFingerprintMode: "invalid", Status: domain.StatusActive},
+		{Name: "账号", RequestTimezone: "Asia/Shanghai", Status: domain.StatusActive},
+		{Name: "账号", RequestTimezone: "Asia/Hong_Kong", Status: domain.StatusActive},
 		{Name: "账号", FastPolicy: []domain.FastPolicyRule{{ServiceTier: "turbo", Action: "pass", FallbackAction: "pass"}}, Status: domain.StatusActive},
 		{Name: "账号", FastPolicy: []domain.FastPolicyRule{{ServiceTier: "priority", Action: "filter", ModelWhitelist: []string{"gpt-*-codex"}, FallbackAction: "pass"}}, Status: domain.StatusActive},
 	}
@@ -379,6 +381,15 @@ func TestNormalizeAccountConfigRejectsUnsupportedValues(t *testing.T) {
 	}
 	if normalized.CodexFingerprintMode != "off" {
 		t.Fatalf("default fingerprint mode = %q, want off", normalized.CodexFingerprintMode)
+	}
+	if normalized.RequestTimezone != "" {
+		t.Fatalf("default request timezone = %q, want disabled", normalized.RequestTimezone)
+	}
+	for _, timezone := range domain.RequestTimezones {
+		normalized, err := normalizeAccountConfig(AccountConfigInput{Name: "账号", RequestTimezone: " " + timezone + " ", Status: domain.StatusActive})
+		if err != nil || normalized.RequestTimezone != timezone {
+			t.Fatalf("request timezone %q = %q, %v", timezone, normalized.RequestTimezone, err)
+		}
 	}
 	for _, config := range tests {
 		if _, err := normalizeAccountConfig(config); err != domain.ErrInvalidInput {

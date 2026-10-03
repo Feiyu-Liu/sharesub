@@ -75,6 +75,7 @@ type AccountConfigInput struct {
 	FastPolicy           []domain.FastPolicyRule `json:"fast_policy"`
 	CodexFingerprintMode string                  `json:"codex_fingerprint_mode"`
 	StateEnabled         bool                    `json:"state_enabled"`
+	RequestTimezone      string                  `json:"request_timezone"`
 	Status               string                  `json:"status"`
 }
 

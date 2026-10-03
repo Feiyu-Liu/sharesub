@@ -53,6 +53,8 @@ Responses HTTP 与 WebSocket 的出站身份先按本地稳定账号 ID、API Ke
 
 新账号默认 `off`，保留不同客户端设备、会话和对话之间的区别。显式 `device`、`session`、`full` 继续提供原有收敛行为；迁移 `037` 仅修改数据库列默认值，保留所有既有账号配置，重新授权也保留配置与账号 ID。切换隔离映射可能使旧会话或缓存失效，客户端重新建立会话后使用新的稳定标识。
 
+账号配置 `request_timezone` 非空时，网关在身份隔离之后、发出上游请求之前，对 Responses HTTP（含 compact、每次换号重试）和 WebSocket `response.create` 帧执行请求时区改写：环境上下文 `<timezone>` 与 `<current_date>`、`web_search` 的 `user_location.timezone`，以及客户端已有的 `Accept-Language`。改写只修补目标字段，其余 `input`/`tools` 内容保持原样；可选时区为固定列表，数据库 CHECK 与应用层校验一致。
+
 ## 额度模型
 
 OpenAI 会在 Codex 响应头中返回主窗口和次窗口的使用信息。ShareSub 根据窗口时长识别含义，不依赖响应头出现顺序：
