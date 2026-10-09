@@ -455,9 +455,16 @@ export interface QuotaResetCredit {
   expires_at: string
 }
 
+export interface CodexCredits {
+  has_credits: boolean
+  unlimited: boolean
+  balance: string | null
+}
+
 export interface QuotaResetCredits {
   available_count: number
   credits: QuotaResetCredit[]
+  codex_credits: CodexCredits | null
   fetched_at: string
 }
 

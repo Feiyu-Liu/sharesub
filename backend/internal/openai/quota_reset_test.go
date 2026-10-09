@@ -15,6 +15,9 @@ import (
 func TestQueryQuotaResetCreditsUsesWhamContract(t *testing.T) {
 	expiresAt := time.Date(2026, 8, 12, 5, 9, 0, 0, time.UTC)
 	client := &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		if r.Method == http.MethodGet && r.URL.Path == "/backend-api/wham/usage" {
+			return &http.Response{StatusCode: http.StatusNotFound, Header: make(http.Header), Body: io.NopCloser(strings.NewReader("{}")), Request: r}, nil
+		}
 		if r.Method != http.MethodGet || r.URL.Path != "/backend-api/wham/rate-limit-reset-credits" {
 			t.Fatalf("request = %s %s", r.Method, r.URL.Path)
 		}
@@ -33,7 +36,7 @@ func TestQueryQuotaResetCreditsUsesWhamContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if credits.AvailableCount != 1 || len(credits.Credits) != 1 || !credits.Credits[0].ExpiresAt.Equal(expiresAt) {
+	if credits.AvailableCount != 1 || len(credits.Credits) != 1 || !credits.Credits[0].ExpiresAt.Equal(expiresAt) || credits.CodexCredits != nil {
 		t.Fatalf("credits = %+v", credits)
 	}
 }

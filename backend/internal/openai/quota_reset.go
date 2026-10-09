@@ -81,7 +81,10 @@ func (g *Gateway) QueryQuotaResetCredits(ctx context.Context, accessToken, chatg
 			credits = append(credits, domain.QuotaResetCredit{ExpiresAt: credit.ExpiresAt})
 		}
 	}
-	return domain.QuotaResetCredits{AvailableCount: len(credits), Credits: credits, FetchedAt: g.now()}, nil
+	// Points are display-only; a failed /wham/usage lookup leaves them unknown
+	// instead of failing the reset-credit query.
+	codexCredits, _ := g.queryCodexCredits(ctx, accessToken, chatgptAccountID, proxyURL)
+	return domain.QuotaResetCredits{AvailableCount: len(credits), Credits: credits, CodexCredits: codexCredits, FetchedAt: g.now()}, nil
 }
 
 func newQuotaResetUpstreamError(operation string, resp *http.Response, now time.Time) *QuotaResetUpstreamError {

@@ -71,6 +71,7 @@ type Gateway struct {
 	now                  func() time.Time
 	quotaResetCreditsURL string
 	quotaResetConsumeURL string
+	usageURL             string
 	state                application.CodexStateController
 }
 
@@ -326,6 +327,7 @@ func NewGateway(httpClient *http.Client) *Gateway {
 		now:                  time.Now,
 		quotaResetCreditsURL: chatGPTRateLimitResetCreditsURL,
 		quotaResetConsumeURL: chatGPTRateLimitResetConsumeURL,
+		usageURL:             chatGPTUsageURL,
 	}
 }
 

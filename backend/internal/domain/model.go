@@ -573,6 +573,7 @@ type QuotaResetCredit struct {
 type QuotaResetCredits struct {
 	AvailableCount int                `json:"available_count"`
 	Credits        []QuotaResetCredit `json:"credits"`
+	CodexCredits   *CodexCredits      `json:"codex_credits"`
 	FetchedAt      time.Time          `json:"fetched_at"`
 }
 

@@ -60,6 +60,11 @@
       </div>
     </div>
 
+    <div v-if="credits" class="quota-reset-points">
+      <span class="quota-reset-label"><Coins :size="13" />点数</span>
+      <strong data-testid="codex-credits" :title="credits.codex_credits ? undefined : '点数查询失败，可稍后重试'">{{ codexCreditsDisplay }}</strong>
+    </div>
+
     <div v-if="credits && expirationTimes.length" class="quota-reset-expirations">
       <span class="quota-reset-expiry" :title="formatFullDate(expirationTimes[0])">
         到期 {{ formatShortDate(expirationTimes[0]) }}
@@ -82,7 +87,7 @@
     </div>
     <p v-else-if="credits && credits.available_count === 0" class="quota-reset-empty">当前没有可用的重置机会</p>
     <p v-else-if="!credits" class="quota-reset-hint">
-      查询 OpenAI 当前可用次数及到期时间<span v-if="!allowReset">；仅房主可执行重置</span>
+      查询 OpenAI 当前可用次数、到期时间及点数余额<span v-if="!allowReset">；仅房主可执行重置</span>
     </p>
 
     <QuotaResetVotePanel
@@ -98,7 +103,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { NButton, NPopconfirm } from 'naive-ui'
-import { RotateCcw } from 'lucide-vue-next'
+import { Coins, RotateCcw } from 'lucide-vue-next'
 import type { QuotaResetCredits } from '../types'
 import type { QuotaResetVote, QuotaResetVoteChoice } from '../types'
 import QuotaResetVotePanel from './QuotaResetVotePanel.vue'
@@ -136,6 +141,16 @@ const showVoteAction = computed(() => !props.vote || !['active', 'executing'].in
 const expirationTimes = computed(() => (props.credits === null ? [] : [...props.credits.credits])
   .sort((left, right) => new Date(left.expires_at).getTime() - new Date(right.expires_at).getTime())
   .map(credit => credit.expires_at))
+const codexCreditsDisplay = computed(() => {
+  const points = props.credits?.codex_credits
+  if (!points) return '未获取'
+  if (points.unlimited) return '无限'
+  if (!points.has_credits) return '0'
+  const balance = points.balance?.trim()
+  // Keep the upstream decimal string intact, including fractional points.
+  if (balance && Number.isFinite(Number(balance)) && Number(balance) >= 0) return balance
+  return '有可用点数'
+})
 const hiddenExpirationCount = computed(() => Math.max(0, expirationTimes.value.length - 1))
 
 const shortDateFormatter = new Intl.DateTimeFormat('zh-CN', {
@@ -167,6 +182,8 @@ watch(() => props.credits, () => { showAllExpirations.value = false })
 .quota-reset-label svg { color: var(--blue); }
 .quota-reset-actions { display: flex; align-items: center; gap: 2px; }
 .quota-reset-actions :deep(.n-button) { padding: 0 6px; font-size: 11px; }
+.quota-reset-points { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 7px; }
+.quota-reset-points strong { color: var(--ink); font-size: 11px; font-variant-numeric: tabular-nums; }
 .quota-reset-expirations { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 7px; }
 .quota-reset-expiry,
 .quota-reset-more { min-height: 22px; display: inline-flex; align-items: center; border-radius: 6px; background: var(--surface-soft); color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; line-height: 1.4; }

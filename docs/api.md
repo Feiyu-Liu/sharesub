@@ -132,7 +132,7 @@ OAuth 开始接口返回 `authorization_url` 和 `flow_id`。完成授权后，�
 | `PATCH` | `/api/plans/{planID}/account` | 登录 Token | `account_id` | 首次绑定或改绑房主拥有的有效 OpenAI 账号 |
 | `GET` | `/api/plans/{planID}/audit-events` | 登录 Token | 无 | 获取最近 100 条 Plan 活动记录 |
 | `POST` | `/api/plans/{planID}/quota/refresh` | 登录 Token | 无 | 房主主动查询并更新账号额度窗口 |
-| `GET` | `/api/plans/{planID}/quota/reset-credits` | 登录 Token | 无 | 有效成员查询 Codex 额度重置机会及到期时间 |
+| `GET` | `/api/plans/{planID}/quota/reset-credits` | 登录 Token | 无 | 有效成员查询 Codex 额度重置机会、到期时间及 Codex 点数余额 |
 | `POST` | `/api/plans/{planID}/quota/reset` | 登录 Token | 无 | 房主消耗一次 Codex 额度重置机会并同步最新窗口 |
 | `GET` | `/api/plans/{planID}/quota/reset-vote` | 登录 Token | 无 | 有效成员查询最近一次额度重置投票 |
 | `POST` | `/api/plans/{planID}/quota/reset-votes` | 登录 Token | 无 | 非仅查看成员发起两小时额度重置投票并自动投赞成票 |
@@ -238,10 +238,12 @@ Plan 详情的 `insights.window_usage` 按当前 OpenAI 账号实际返回的 5h
 | `PATCH` | `/api/admin/plans/{planID}/members/{memberID}` | 管理员 Token | `share_basis_points`, `usd_limit_micros` | 修改任意 Plan 成员的份额与美元上限 |
 | `DELETE` | `/api/admin/plans/{planID}/members/{memberID}` | 管理员 Token | 无 | 从任意 Plan 移除成员 |
 | `POST` | `/api/admin/plans/{planID}/quota/refresh` | 管理员 Token | 无 | 查询并更新任意 Plan 的账号额度窗口 |
-| `GET` | `/api/admin/plans/{planID}/quota/reset-credits` | 管理员 Token | 无 | 查询任意 Plan 的 Codex 额度重置机会 |
+| `GET` | `/api/admin/plans/{planID}/quota/reset-credits` | 管理员 Token | 无 | 查询任意 Plan 的 Codex 额度重置机会及 Codex 点数余额 |
 | `POST` | `/api/admin/plans/{planID}/quota/reset` | 管理员 Token | 无 | 消耗任意 Plan 的一次 Codex 额度重置机会 |
 | `GET` | `/api/admin/keys` | 管理员 Token | 无 | 列出全部 API Key 元数据 |
 | `DELETE` | `/api/admin/keys/{keyID}` | 管理员 Token | 无 | 吊销 API Key |
+
+两个 `quota/reset-credits` 接口在查询重置机会后，会再读取上游 `/backend-api/wham/usage` 的 `credits`，作为 `codex_credits` 返回：`{has_credits, unlimited, balance}`。`balance` 保留上游的小数字符串，不存在时为 `null`。点数是额度用尽后由 OpenAI 自动扣除的付费余额，ShareSub 只展示，不保存也不参与调度。上游未返回或查询失败时 `codex_credits` 为 `null`，不影响重置机会结果。
 
 管理员 Plan 接口复用房主业务约束，但不会把管理员写入 Plan 成员表，也不会让管理员的 API Key 获得该 Plan 的路由资格。涉及 Plan 变更和账号重新授权的审计事件使用真实管理员作为 `actor_user_id`；资源归属校验、账号凭据加密关联数据仍使用实际 `owner_user_id`。
 

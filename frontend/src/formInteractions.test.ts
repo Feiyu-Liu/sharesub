@@ -596,6 +596,7 @@ describe('form interactions', () => {
     const refreshQuota = vi.spyOn(api, 'refreshPlanQuota').mockResolvedValue({ account_id: account.id, signals: [] })
     const queryCredits = vi.spyOn(api, 'planQuotaResetCredits').mockResolvedValue({
       available_count: 1,
+      codex_credits: null,
       credits: [{ expires_at: '2026-08-12T05:09:00Z' }],
       fetched_at: '2026-08-06T10:00:00Z',
     })
@@ -622,11 +623,13 @@ describe('form interactions', () => {
     const queryCredits = vi.spyOn(api, 'planQuotaResetCredits')
       .mockResolvedValueOnce({
         available_count: 2,
+        codex_credits: null,
         credits: [{ expires_at: '2026-08-12T05:09:00Z' }, { expires_at: '2026-08-13T02:13:00Z' }],
         fetched_at: '2026-08-06T10:00:00Z',
       })
       .mockResolvedValueOnce({
         available_count: 1,
+        codex_credits: null,
         credits: [{ expires_at: '2026-08-13T02:13:00Z' }],
         fetched_at: '2026-08-06T10:01:00Z',
       })
@@ -669,8 +672,8 @@ describe('form interactions', () => {
     vi.spyOn(api, 'plan').mockImplementation(async () => structuredClone(planDetail))
     vi.spyOn(api, 'refreshPlanQuota').mockResolvedValue({ account_id: account.id, signals: [] })
     vi.spyOn(api, 'planQuotaResetCredits')
-      .mockResolvedValueOnce({ available_count: 1, credits: [{ expires_at: '2026-08-12T05:09:00Z' }], fetched_at: '2026-08-06T10:00:00Z' })
-      .mockResolvedValueOnce({ available_count: 0, credits: [], fetched_at: '2026-08-06T10:01:00Z' })
+      .mockResolvedValueOnce({ available_count: 1, codex_credits: null, credits: [{ expires_at: '2026-08-12T05:09:00Z' }], fetched_at: '2026-08-06T10:00:00Z' })
+      .mockResolvedValueOnce({ available_count: 0, codex_credits: null, credits: [], fetched_at: '2026-08-06T10:01:00Z' })
     const reset = vi.spyOn(api, 'resetPlanQuota').mockResolvedValue({
       code: 'rate_limit_reset_credit_redeemed',
       credit: null,
@@ -700,6 +703,7 @@ describe('form interactions', () => {
     vi.spyOn(api, 'refreshPlanQuota').mockResolvedValue({ account_id: account.id, signals: [] })
     vi.spyOn(api, 'planQuotaResetCredits').mockResolvedValue({
       available_count: 1,
+      codex_credits: null,
       credits: [{ expires_at: '2026-08-12T05:09:00Z' }],
       fetched_at: '2026-08-06T10:00:00Z',
     })
@@ -732,7 +736,7 @@ describe('form interactions', () => {
     vi.spyOn(api, 'refreshPlanQuota').mockResolvedValue({ account_id: account.id, signals: [] })
     vi.spyOn(api, 'quotaResetVote').mockResolvedValue({ vote: null })
     vi.spyOn(api, 'createQuotaResetVote').mockResolvedValue({ vote: cancelledVote, reset_result: null })
-    vi.spyOn(api, 'planQuotaResetCredits').mockResolvedValue({ available_count: 1, credits: [{ expires_at: '2026-08-12T05:09:00Z' }], fetched_at: createdAt })
+    vi.spyOn(api, 'planQuotaResetCredits').mockResolvedValue({ available_count: 1, codex_credits: null, credits: [{ expires_at: '2026-08-12T05:09:00Z' }], fetched_at: createdAt })
     const emit = vi.fn()
     const scope = effectScope()
     const view = scope.run(() => usePlansView(reactive({ accounts: [account], plans: [plan], user: owner, initialPlanId: '', invitePlanId: '' }), emit))!
@@ -758,6 +762,7 @@ describe('form interactions', () => {
     vi.spyOn(api, 'refreshPlanQuota').mockResolvedValue({ account_id: account.id, signals: [] })
     vi.spyOn(api, 'planQuotaResetCredits').mockResolvedValue({
       available_count: 1,
+      codex_credits: null,
       credits: [{ expires_at: '2026-08-12T05:09:00Z' }],
       fetched_at: '2026-08-06T10:00:00Z',
     })

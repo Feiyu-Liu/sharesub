@@ -34,7 +34,7 @@ describe('QuotaResetControls', () => {
 
     expect(wrapper.emitted('query')).toHaveLength(1)
     expect(wrapper.get('button[aria-label="重置 OpenAI 额度"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.text()).toContain('查询 OpenAI 当前可用次数及到期时间')
+    expect(wrapper.text()).toContain('查询 OpenAI 当前可用次数、到期时间及点数余额')
   })
 
   it('renders the exact available count and expandable expirations', async () => {
@@ -43,6 +43,7 @@ describe('QuotaResetControls', () => {
         ...baseProps,
         credits: {
           available_count: 2,
+          codex_credits: null,
           credits: [
             { expires_at: '2026-08-13T02:13:00Z' },
             { expires_at: '2026-08-12T05:09:00Z' },
@@ -65,6 +66,7 @@ describe('QuotaResetControls', () => {
         ...baseProps,
         credits: {
           available_count: 1,
+          codex_credits: null,
           credits: [{ expires_at: '2026-08-12T05:09:00Z' }],
           fetched_at: '2026-08-06T10:00:00Z',
         },
@@ -80,7 +82,7 @@ describe('QuotaResetControls', () => {
     expect(wrapper.get('button[aria-label="查询重置次数"]').attributes('disabled')).toBeDefined()
     expect(wrapper.get('button[aria-label="重置 OpenAI 额度"]').attributes('disabled')).toBeDefined()
 
-    await wrapper.setProps({ querying: false, credits: { available_count: 0, credits: [], fetched_at: '2026-08-06T10:00:00Z' } })
+    await wrapper.setProps({ querying: false, credits: { available_count: 0, codex_credits: null, credits: [], fetched_at: '2026-08-06T10:00:00Z' } })
     expect(wrapper.text()).toContain('当前没有可用的重置机会')
     expect(wrapper.get('button[aria-label="重置 OpenAI 额度"]').attributes('disabled')).toBeDefined()
   })
@@ -92,6 +94,7 @@ describe('QuotaResetControls', () => {
         allowReset: false,
         credits: {
           available_count: 1,
+          codex_credits: null,
           credits: [{ expires_at: '2026-08-12T05:09:00Z' }],
           fetched_at: '2026-08-06T10:00:00Z',
         },
@@ -103,5 +106,22 @@ describe('QuotaResetControls', () => {
     expect(wrapper.text()).toContain('次数 1')
     expect(wrapper.get('button[aria-label="重置 OpenAI 额度"]').attributes('disabled')).toBeDefined()
     expect(wrapper.get('button[aria-label="重置 OpenAI 额度"]').attributes('title')).toBe('只有房主可以执行额度重置')
+  })
+
+  it.each([
+    [{ has_credits: true, unlimited: false, balance: '1200.50' }, '1200.50'],
+    [{ has_credits: false, unlimited: false, balance: '0' }, '0'],
+    [{ has_credits: false, unlimited: true, balance: null }, '无限'],
+    [{ has_credits: true, unlimited: false, balance: null }, '有可用点数'],
+    [null, '未获取'],
+  ])('renders Codex points %#', (codexCredits, expected) => {
+    const wrapper = mount(QuotaResetControls, {
+      props: {
+        ...baseProps,
+        credits: { available_count: 0, credits: [], codex_credits: codexCredits, fetched_at: '2026-08-06T10:00:00Z' },
+      },
+    })
+
+    expect(wrapper.get('[data-testid="codex-credits"]').text()).toBe(expected)
   })
 })
